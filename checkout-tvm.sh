@@ -13,4 +13,9 @@ git fetch --depth 1 origin "$TVM_REVISION"
 git reset --hard FETCH_HEAD
 git submodule init
 git submodule update --recursive --depth 1
-git am "$dir"/patches/*
+
+if [ -d "$dir"/patches ]; then
+    for patch in "$dir"/patches/*.patch; do
+        patch -p1 <"$patch"
+    done
+fi
