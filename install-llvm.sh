@@ -4,7 +4,7 @@ set -x
 dir="$(realpath -e "$(dirname "$0")")"
 
 PYTHON=/opt/python/cp310-cp310/bin/python
-LLVM_VERSION=14.0.6.2022062201+f28c006a
+LLVM_VERSION=19.1.7.2025011201+cd708029
 
 $PYTHON -m pip install \
         "llvm==$LLVM_VERSION" \
