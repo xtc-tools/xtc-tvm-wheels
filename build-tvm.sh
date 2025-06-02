@@ -11,7 +11,9 @@ cd tvm
 mkdir build
 cp cmake/config.cmake build
 sed -i \
-    "s|USE_LLVM OFF|USE_LLVM $LLVM_CONFIG|" \
+    -e "s|USE_LLVM OFF|USE_LLVM $LLVM_CONFIG|" \
+    -e "s|USE_MICRO OFF|USE_MICRO ON|" \
+    -e "s|USE_MICRO_STANDALONE_RUNTIME OFF|USE_MICRO_STANDALONE_RUNTIME ON|" \
     build/config.cmake
 
 cmake -B build -G Ninja .
