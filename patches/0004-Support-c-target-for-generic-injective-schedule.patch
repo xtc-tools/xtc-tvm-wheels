@@ -1,0 +1,25 @@
+From 95bed230a29a6b15ff738df2d44e126a46f2d007 Mon Sep 17 00:00:00 2001
+From: Christophe Guillon <christophe.guillon@inria.fr>
+Date: Wed, 11 Jun 2025 18:22:20 +0200
+Subject: [PATCH 2/2] Support c target for generic injective schedule
+
+---
+ python/tvm/topi/generic/injective.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/python/tvm/topi/generic/injective.py b/python/tvm/topi/generic/injective.py
+index 00c35b22b..95267e224 100644
+--- a/python/tvm/topi/generic/injective.py
++++ b/python/tvm/topi/generic/injective.py
+@@ -56,7 +56,7 @@ def schedule_injective(outs):
+         The computation schedule for the op.
+     """
+     target = tvm.target.Target.current(allow_none=False)
+-    if target.kind.name != "llvm":
++    if target.kind.name not in ("llvm", "c"):
+         raise RuntimeError(f"schedule_injective not registered for '{target}'")
+     outs = [outs] if isinstance(outs, te.tensor.Tensor) else outs
+     x = outs[0]
+-- 
+2.34.1
+
