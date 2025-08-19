@@ -1,9 +1,11 @@
 default:
   image: python:3.12
-  # Allocate large shared (4xCPU 8GB)
   tags:
-    - ci.inria.fr
-    - large
+    # Use pinocchio
+    - pinocchio-docker
+    # Allocate large shared (4xCPU 8GB)
+    #- ci.inria.fr
+    #- large
   before_script:
     - curl -sSL https://get.docker.com/ | sh
     - env
