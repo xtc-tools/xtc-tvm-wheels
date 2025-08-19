@@ -4,15 +4,29 @@ Date: Sun, 2 Feb 2025 13:36:38 +0100
 Subject: [PATCH 2/2] Add optional external version in build
 
 Set TVM_PKG_VERSION in order to override default version.
+
+Amended on 2025/08/19 to add optional envvar list
+TVM_EXTRA_LIB_LIST of dirs/files to add to installed LIB_LIST.
 ---
- python/setup.py | 2 +-
+ python/setup.py | 2 +++++-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/python/setup.py b/python/setup.py
 index 594ab5f..5ed753e 100644
 --- a/python/setup.py
 +++ b/python/setup.py
-@@ -243,7 +243,7 @@ extras_require = {
+@@ -130,6 +130,10 @@ def _remove_path(path):
+ LIB_LIST, __version__ = get_lib_path()
+ __version__ = git_describe_version(__version__)
+ 
++TVM_EXTRA_LIB_LIST = os.environ.get("TVM_EXTRA_LIB_LIST")
++if TVM_EXTRA_LIB_LIST:
++    LIB_LIST += TVM_EXTRA_LIB_LIST.split(":")
++
+ 
+ def config_cython():
+     """Try to configure cython and return cython configuration"""
+@@ -243,7 +247,7 @@ extras_require = {
  
  setup(
      name="tvm",
