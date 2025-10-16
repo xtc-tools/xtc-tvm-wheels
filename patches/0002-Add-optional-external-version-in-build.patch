@@ -1,32 +1,35 @@
-From 6b7146c627cba9bce5f90c8d3f7d66a0e366bf9e Mon Sep 17 00:00:00 2001
+From 94da0e9fd9fb7f744aa922f6ab4e380b3af18e1f Mon Sep 17 00:00:00 2001
 From: Christophe Guillon <christophe.guillon@inria.fr>
 Date: Sun, 2 Feb 2025 13:36:38 +0100
-Subject: [PATCH 2/2] Add optional external version in build
+Subject: [PATCH] Add optional external version in build
 
 Set TVM_PKG_VERSION in order to override default version.
 
 Amended on 2025/08/19 to add optional envvar list
 TVM_EXTRA_LIB_LIST of dirs/files to add to installed LIB_LIST.
 ---
- python/setup.py | 2 +++++-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ python/setup.py | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/python/setup.py b/python/setup.py
-index 594ab5f..5ed753e 100644
+index 679f507..8328ef2 100644
 --- a/python/setup.py
 +++ b/python/setup.py
-@@ -130,6 +130,10 @@ def _remove_path(path):
+@@ -130,6 +130,13 @@ def _remove_path(path):
  LIB_LIST, __version__ = get_lib_path()
  __version__ = git_describe_version(__version__)
  
-+TVM_EXTRA_LIB_LIST = os.environ.get("TVM_EXTRA_LIB_LIST")
-+if TVM_EXTRA_LIB_LIST:
-+    LIB_LIST += TVM_EXTRA_LIB_LIST.split(":")
 +
- 
- def config_cython():
-     """Try to configure cython and return cython configuration"""
-@@ -243,7 +247,7 @@ extras_require = {
++if not CONDA_BUILD and not INPLACE_BUILD:
++    TVM_EXTRA_LIB_LIST = os.environ.get("TVM_EXTRA_LIB_LIST")
++    if TVM_EXTRA_LIB_LIST:
++        LIB_LIST += TVM_EXTRA_LIB_LIST.split(":")
++
++
+ if not CONDA_BUILD and not INPLACE_BUILD:
+     # Wheel cleanup
+     for path in LIB_LIST:
+@@ -242,7 +249,7 @@ extras_require = {
  
  setup(
      name="tvm",
@@ -36,5 +39,5 @@ index 594ab5f..5ed753e 100644
      long_description=long_description_contents(),
      long_description_content_type="text/markdown",
 -- 
-2.34.1
+2.30.2
 
