@@ -10,7 +10,7 @@ TVM_PKG_VERSION="$(cat tvm_version.txt)"
 # Trick for installing libLLVM along libtvm.so
 # Set TVM_LIBRARY_PATH and install tvm with ninja install
 # Set LLVM_LIB_LIST along with corresponding patch to copy libLLVM.so
-TVM_INSTALL_PREFIX="/project/tvm/install"
+TVM_INSTALL_PREFIX="/tmp/project/tvm/install"
 TVM_LIBRARY_PATH="$TVM_INSTALL_PREFIX/lib"
 TVM_EXTRA_LIB_LIST="$TVM_INSTALL_PREFIX/lib/libLLVM.so"
 
