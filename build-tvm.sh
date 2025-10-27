@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 set -x
-dir="$(realpath -e "$(dirname "$0")")"
+dir="$(dirname "$(readlink -f "$0")")"
 
-PYTHON=/opt/python/cp310-cp310/bin/python
 LLVM_PREFIX="$("$PYTHON" -c 'import llvm;print(llvm.__path__[0])')"
+
+if [ "$BUILD_PLATFORM" = "linux" ]; then
+    PYTHON=/opt/python/cp310-cp310/bin/python
+elif [ "$BUILD_PLATFORM" = "darwin" ]; then
+    PYTHON=/Library/Frameworks/Python.framework/Versions/3.10/bin/python3.10
+else 
+    echo "Error: Unknown BUILD_PLATFORM '$BUILD_PLATFORM'. Must be 'linux' or 'darwin'."
+    exit 1
+fi
 
 TVM_INSTALL_PREFIX="${TVM_INSTALL_PREFIX-/usr/local}"
 
