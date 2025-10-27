@@ -36,7 +36,7 @@ if [ "$BUILD_PLATFORM" = "linux" ]; then
 elif [ "$BUILD_PLATFORM" = "darwin" ]; then
     CIBW_PLATFORM='macos'
     CIBW_ARCHS='arm64'
-    CIBW_BUILD='cp3-macosx_arm64'
+    CIBW_BUILD='cp3*-macosx_arm64'
     CIBW_MANYLINUX_IMAGE="" 
     TVM_EXTRA_LIB_LIST="$TVM_INSTALL_PREFIX/lib/libLLVM.dylib"
 else
