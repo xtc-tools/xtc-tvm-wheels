@@ -18,7 +18,7 @@ LLVM_CONFIG="$TVM_INSTALL_PREFIX/bin/llvm-config"
 cp cmake/config.cmake build
 sed -i '' "s|USE_LLVM OFF|USE_LLVM $LLVM_CONFIG|" build/config.cmake
 
-cmake \
+DYLD_LIBRARY_PATH=$LLVM_PREFIX/.dylibs cmake \
     -DCMAKE_INSTALL_PREFIX:PATH="$TVM_INSTALL_PREFIX" \
     -DCMAKE_INSTALL_RPATH='$ORIGIN' \
     -B build -G Ninja .
