@@ -1,0 +1,270 @@
+From 1638537e6fdfc3b773a6fb4d283788de681a02fb Mon Sep 17 00:00:00 2001
+From: Christophe Guillon <christophe.guillon@inria.fr>
+Date: Tue, 28 Oct 2025 13:23:12 +0100
+Subject: [PATCH] Cherry pick support for LLVM 21
+
+---
+ src/target/llvm/codegen_amdgpu.cc         |  4 +++
+ src/target/llvm/codegen_blob.cc           |  4 +++
+ src/target/llvm/codegen_llvm.cc           |  8 ++++++
+ src/target/llvm/codegen_nvptx.cc          |  8 ++++++
+ src/target/llvm/llvm_instance.cc          |  4 +++
+ src/target/llvm/llvm_module.cc            | 34 ++++++++++++++++++++++-
+ tests/cpp/target/parsers/aprofile_test.cc | 10 +++++++
+ tests/cpp/tir_scalable_datatype.cc        | 15 ++++++++--
+ 8 files changed, 83 insertions(+), 4 deletions(-)
+
+diff --git a/src/target/llvm/codegen_amdgpu.cc b/src/target/llvm/codegen_amdgpu.cc
+index 0dbbcc89..f75570ae 100644
+--- a/src/target/llvm/codegen_amdgpu.cc
++++ b/src/target/llvm/codegen_amdgpu.cc
+@@ -283,7 +283,11 @@ runtime::Module BuildAMDGPU(IRModule mod, Target target) {
+ 
+   for (auto& bitcode_path : bitcode_files) {
+     std::unique_ptr<llvm::Module> mlib = llvm_instance.LoadIR(bitcode_path);
++#if TVM_LLVM_VERSION >= 210
++    mlib->setTargetTriple(llvm::Triple(llvm_target->GetTargetTriple()));
++#else
+     mlib->setTargetTriple(llvm_target->GetTargetTriple());
++#endif
+     mlib->setDataLayout(tm->createDataLayout());
+ 
+     for (llvm::Function& f : mlib->functions()) {
+diff --git a/src/target/llvm/codegen_blob.cc b/src/target/llvm/codegen_blob.cc
+index 343fdca3..5254d937 100644
+--- a/src/target/llvm/codegen_blob.cc
++++ b/src/target/llvm/codegen_blob.cc
+@@ -69,7 +69,11 @@ std::unique_ptr<llvm::Module> CodeGenBlob(const std::string& data, bool system_l
+   llvm::LLVMContext* ctx = llvm_target->GetContext();
+   std::string module_name = c_symbol_prefix + "devc";
+   auto module = std::make_unique<llvm::Module>(module_name, *ctx);
++#if TVM_LLVM_VERSION >= 210
++  module->setTargetTriple(triple);
++#else
+   module->setTargetTriple(triple.str());
++#endif
+   llvm_target->SetTargetMetadata(module.get());
+   module->setDataLayout(tm->createDataLayout());
+   auto* blob_value = llvm::ConstantDataArray::getString(*ctx, data, false);
+diff --git a/src/target/llvm/codegen_llvm.cc b/src/target/llvm/codegen_llvm.cc
+index b1caf281..2f56526f 100644
+--- a/src/target/llvm/codegen_llvm.cc
++++ b/src/target/llvm/codegen_llvm.cc
+@@ -166,7 +166,11 @@ void CodeGenLLVM::SetFastMathFlags(llvm::FastMathFlags fmf) { builder_->setFastM
+ 
+ void CodeGenLLVM::InitTarget() {
+   llvm::TargetMachine* tm = llvm_target_->GetOrCreateTargetMachine();
++#if TVM_LLVM_VERSION >= 210
++  module_->setTargetTriple(tm->getTargetTriple());
++#else
+   module_->setTargetTriple(tm->getTargetTriple().str());
++#endif
+   module_->setDataLayout(tm->createDataLayout());
+ #if TVM_LLVM_VERSION >= 200
+   data_layout_.reset(new llvm::DataLayout(module_.get()->getDataLayout()));
+@@ -385,7 +389,11 @@ void CodeGenLLVM::HandleImport(const std::string& code) {
+     mlib = llvm_target_->GetInstance().ParseIR(code);
+   }
+ 
++#if TVM_LLVM_VERSION >= 210
++  mlib->setTargetTriple(llvm::Triple(llvm_target_->GetTargetTriple()));
++#else
+   mlib->setTargetTriple(llvm_target_->GetTargetTriple());
++#endif
+   mlib->setDataLayout(llvm_target_->GetOrCreateTargetMachine()->createDataLayout());
+   // mark all the functions as force inline
+   for (llvm::Function& f : mlib->functions()) {
+diff --git a/src/target/llvm/codegen_nvptx.cc b/src/target/llvm/codegen_nvptx.cc
+index 492248ea..f685a585 100644
+--- a/src/target/llvm/codegen_nvptx.cc
++++ b/src/target/llvm/codegen_nvptx.cc
+@@ -188,7 +188,11 @@ class CodeGenNVPTX : public CodeGenLLVM {
+     } else if (sync == "shared" || sync == "shared.dyn") {
+ #if TVM_LLVM_VERSION >= 200
+       llvm::Function* f = llvm::cast<llvm::Function>(llvm::Intrinsic::getOrInsertDeclaration(
++#if TVM_LLVM_VERSION >= 210
++          module_.get(), llvm::Intrinsic::nvvm_barrier_cta_sync_aligned_all, {}));
++#else
+           module_.get(), llvm::Intrinsic::nvvm_barrier0, {}));
++#endif
+ #else
+       llvm::Function* f =
+           llvm::Intrinsic::getDeclaration(module_.get(), llvm::Intrinsic::nvvm_barrier0);
+@@ -334,7 +338,11 @@ runtime::Module BuildNVPTX(IRModule mod, Target target) {
+     std::string path = (*flibdevice_path)(compute_ver);
+     if (path.length() != 0) {
+       std::unique_ptr<llvm::Module> mlib = llvm_instance.LoadIR(path);
++#if TVM_LLVM_VERSION >= 210
++      mlib->setTargetTriple(llvm::Triple(llvm_target->GetTargetTriple()));
++#else
+       mlib->setTargetTriple(llvm_target->GetTargetTriple());
++#endif
+       mlib->setDataLayout(tm->createDataLayout());
+       cg->AddLinkModule(std::move(mlib));
+     }
+diff --git a/src/target/llvm/llvm_instance.cc b/src/target/llvm/llvm_instance.cc
+index e2c5e285..6a2e2bcf 100644
+--- a/src/target/llvm/llvm_instance.cc
++++ b/src/target/llvm/llvm_instance.cc
+@@ -928,7 +928,11 @@ std::string LLVMTarget::GetTargetMetadata(const llvm::Module& module) {
+       return meta.str();
+     }
+   }
++#if TVM_LLVM_VERSION >= 210
++  return "llvm -mtriple " + module.getTargetTriple().str();
++#else
+   return "llvm -mtriple " + module.getTargetTriple();
++#endif
+ }
+ 
+ void LLVMTarget::SetTargetMetadata(llvm::Module* module) const {
+diff --git a/src/target/llvm/llvm_module.cc b/src/target/llvm/llvm_module.cc
+index 0f026f39..eff4bc5e 100644
+--- a/src/target/llvm/llvm_module.cc
++++ b/src/target/llvm/llvm_module.cc
+@@ -33,8 +33,10 @@
+ #include <llvm/ExecutionEngine/MCJIT.h>
+ #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+ #include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
++#if _WIN32
+ #include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
+ #include <llvm/ExecutionEngine/SectionMemoryManager.h>
++#endif
+ #include <llvm/IR/DataLayout.h>
+ #include <llvm/IR/Function.h>
+ #include <llvm/IR/Intrinsics.h>
+@@ -440,7 +442,11 @@ void LLVMModuleNode::InitMCJIT() {
+   // create MCJIT
+   mcjit_ee_ = builder.create(tm.release());
+   ICHECK(mcjit_ee_ != nullptr) << "Failed to initialize LLVM MCJIT engine for "
++#if TVM_LLVM_VERSION >= 210
++                               << module_->getTargetTriple().str();
++#else
+                                << module_->getTargetTriple();
++#endif
+ 
+   VLOG(2) << "LLVM MCJIT execute " << module_->getModuleIdentifier() << " for triple `"
+           << llvm_target->GetTargetTriple() << "`"
+@@ -514,17 +520,34 @@ void LLVMModuleNode::InitORCJIT() {
+ #if TVM_LLVM_VERSION >= 130
+   // linker
+   const auto linkerBuilder =
++#if TVM_LLVM_VERSION >= 210
++      [&](llvm::orc::ExecutionSession& session)
++      -> llvm::Expected<std::unique_ptr<llvm::orc::ObjectLayer>> {
++#else
+       [&](llvm::orc::ExecutionSession& session,
+           const llvm::Triple& triple) -> std::unique_ptr<llvm::orc::ObjectLayer> {
++#endif
++#if _WIN32
+     auto GetMemMgr = []() { return std::make_unique<llvm::SectionMemoryManager>(); };
+     auto ObjLinkingLayer =
+         std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(session, std::move(GetMemMgr));
++#else
++    auto ObjLinkingLayer = std::make_unique<llvm::orc::ObjectLinkingLayer>(session);
++#endif
++#if TVM_LLVM_VERSION >= 210
++    if (tm_builder.getTargetTriple().isOSBinFormatCOFF()) {
++#else
+     if (triple.isOSBinFormatCOFF()) {
++#endif
+       ObjLinkingLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
+       ObjLinkingLayer->setAutoClaimResponsibilityForObjectSymbols(true);
+     }
++#if TVM_LLVM_VERSION >= 210
++    return llvm::Expected<std::unique_ptr<llvm::orc::ObjectLayer>>(std::move(ObjLinkingLayer));
++#else
+     return ObjLinkingLayer;
+-  };
++#endif
++  };  // NOLINT(readability/braces)
+ #endif
+ 
+   // create LLJIT
+@@ -539,7 +562,11 @@ void LLVMModuleNode::InitORCJIT() {
+                                   .create());
+ 
+   ICHECK(orcjit_ee_ != nullptr) << "Failed to initialize LLVM ORCJIT engine for "
++#if TVM_LLVM_VERSION >= 210
++                                << module_->getTargetTriple().str();
++#else
+                                 << module_->getTargetTriple();
++#endif
+ 
+   // store ctors
+   auto ctors = llvm::orc::getConstructors(*module_);
+@@ -643,7 +670,12 @@ TVM_REGISTER_GLOBAL("codegen.LLVMModuleCreate")
+       // Generate a LLVM module from an input target string
+       auto module = std::make_unique<llvm::Module>(module_name, *llvm_target->GetContext());
+       llvm_target->SetTargetMetadata(module.get());
++#if TVM_LLVM_VERSION >= 210
++      module->setTargetTriple(llvm::Triple(llvm_target->GetTargetTriple()));
++#else
+       module->setTargetTriple(llvm_target->GetTargetTriple());
++      module->setTargetTriple(llvm_target->GetTargetTriple());
++#endif
+       module->setDataLayout(llvm_target->GetOrCreateTargetMachine()->createDataLayout());
+       n->Init(std::move(module), std::move(llvm_instance));
+       n->SetJITEngine(llvm_target->GetJITEngine());
+diff --git a/tests/cpp/target/parsers/aprofile_test.cc b/tests/cpp/target/parsers/aprofile_test.cc
+index d329a9b9..26f52f49 100644
+--- a/tests/cpp/target/parsers/aprofile_test.cc
++++ b/tests/cpp/target/parsers/aprofile_test.cc
+@@ -317,7 +317,12 @@ TEST_F(AProfileParser, DefaultSVESupportSVESupport) {
+   TargetJSON target = ParseTargetWithAttrs("", "aarch64-arm-none-eabi", {arch_attr});
+   TargetFeatures features = Downcast<TargetFeatures>(target.at("features"));
+   EXPECT_TRUE(IsArch(target));
++#if TVM_LLVM_VERSION >= 190 || (TVM_LLVM_VERSION / 10) == 13
++  // The generic aarch64 should not have SVE enabled
++  EXPECT_FALSE(Downcast<Bool>(features.at("has_sve")));
++#else
+   EXPECT_TRUE(Downcast<Bool>(features.at("has_sve")));
++#endif
+ 
+   // Check that the "has_sve" feature is set when "+sve" is explicitly set as an attribute.
+   target = ParseTargetWithAttrs("", "aarch64-arm-none-eabi", {arch_attr, "+sve"});
+@@ -359,7 +364,12 @@ TEST_F(AProfileParser, DefaultFP16Support) {
+   TargetJSON target = ParseTargetWithAttrs("", "aarch64-arm-none-eabi", {arch_attr});
+   TargetFeatures features = Downcast<TargetFeatures>(target.at("features"));
+   EXPECT_TRUE(IsArch(target));
++#if TVM_LLVM_VERSION >= 190 || (TVM_LLVM_VERSION / 10) == 13
++  // The generic aarch64 should not have FP16 enabled
++  EXPECT_FALSE(Downcast<Bool>(features.at("has_fp16_simd")));
++#else
+   EXPECT_TRUE(Downcast<Bool>(features.at("has_fp16_simd")));
++#endif
+ 
+   // Check that the "has_fp16_simd" feature is set when "+fullfp16" is explicitly set as an
+   // attribute.
+diff --git a/tests/cpp/tir_scalable_datatype.cc b/tests/cpp/tir_scalable_datatype.cc
+index da30706e..e7fb1b22 100644
+--- a/tests/cpp/tir_scalable_datatype.cc
++++ b/tests/cpp/tir_scalable_datatype.cc
+@@ -187,12 +187,21 @@ TEST(ScalableDataType, TestScalableUInt) {
+ #if TVM_LLVM_VERSION >= 130
+ TEST(ScalableDataType, TestScalableIntrinCall) {
+   tvm::DataType scalable_type = tvm::DataType(kDLInt, 32, 4, true);
+-  tvm::tir::Call call = tvm::tir::Call(
+-      scalable_type, tvm::tir::builtin::call_llvm_intrin(),
+-      {tvm::IntImm(tvm::DataType::Int(32), ::llvm::Intrinsic::experimental_stepvector)});
++  tvm::tir::Call call =
++      tvm::tir::Call(scalable_type, tvm::tir::builtin::call_llvm_intrin(),
++#if TVM_LLVM_VERSION >= 200
++                     {tvm::IntImm(tvm::DataType::Int(32), ::llvm::Intrinsic::stepvector)});
++#else
++                     {tvm::IntImm(tvm::DataType::Int(32),
++                                  ::llvm::Intrinsic::experimental_stepvector)});
++#endif
+   ASSERT_EQ(call->dtype, scalable_type);
+   ASSERT_EQ(call->Script(),
++#if TVM_LLVM_VERSION >= 200
++            "T.call_llvm_intrin(\"int32xvscalex4\", \"llvm.stepvector\")");
++#else
+             "T.call_llvm_intrin(\"int32xvscalex4\", \"llvm.experimental.stepvector\")");
++#endif
+ }
+ #endif
+ 
+-- 
+2.30.2
+

@@ -1,14 +1,14 @@
-From 95bed230a29a6b15ff738df2d44e126a46f2d007 Mon Sep 17 00:00:00 2001
+From 3d38ffaa2b64e6026839126a9454a1b8a592bb5b Mon Sep 17 00:00:00 2001
 From: Christophe Guillon <christophe.guillon@inria.fr>
 Date: Wed, 11 Jun 2025 18:22:20 +0200
-Subject: [PATCH 2/2] Support c target for generic injective schedule
+Subject: [PATCH] Support c target for generic injective schedule
 
 ---
  python/tvm/topi/generic/injective.py | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/python/tvm/topi/generic/injective.py b/python/tvm/topi/generic/injective.py
-index 00c35b22b..95267e224 100644
+index 00c35b22..95267e22 100644
 --- a/python/tvm/topi/generic/injective.py
 +++ b/python/tvm/topi/generic/injective.py
 @@ -56,7 +56,7 @@ def schedule_injective(outs):
@@ -21,5 +21,5 @@ index 00c35b22b..95267e224 100644
      outs = [outs] if isinstance(outs, te.tensor.Tensor) else outs
      x = outs[0]
 -- 
-2.34.1
+2.30.2
 

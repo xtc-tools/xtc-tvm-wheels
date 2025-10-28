@@ -1,7 +1,7 @@
-From b67ac8e5003d92e545da6f951ff506f47ef96b2e Mon Sep 17 00:00:00 2001
+From e9aa8f9cac14f9a37766867fcb418ddb8c13d71b Mon Sep 17 00:00:00 2001
 From: Christophe Guillon <christophe.guillon@inria.fr>
 Date: Fri, 7 Jun 2024 12:48:43 +0200
-Subject: [PATCH 1/2] Fix race on ComputationCache
+Subject: [PATCH] Fix race on ComputationCache
 
 The ComputationCache in the common subexpression optimization is
 static and hence global to all threads/compilation contexts.
@@ -14,7 +14,7 @@ Fix by declaring the ComputationCache thread local.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/tir/transforms/common_subexpr_elim_tools.cc b/src/tir/transforms/common_subexpr_elim_tools.cc
-index ba101ce..7fdd55e 100644
+index ba101ce4..7fdd55e9 100644
 --- a/src/tir/transforms/common_subexpr_elim_tools.cc
 +++ b/src/tir/transforms/common_subexpr_elim_tools.cc
 @@ -48,7 +48,7 @@ namespace tir {
@@ -27,7 +27,7 @@ index ba101ce..7fdd55e 100644
  /* ********************************** Class ComputationsDoneBy **********************************
  *********************************************************************************************** */
 diff --git a/src/tir/transforms/common_subexpr_elim_tools.h b/src/tir/transforms/common_subexpr_elim_tools.h
-index 841f1d6..40f6e1f 100644
+index 841f1d65..40f6e1fe 100644
 --- a/src/tir/transforms/common_subexpr_elim_tools.h
 +++ b/src/tir/transforms/common_subexpr_elim_tools.h
 @@ -112,7 +112,7 @@ class ComputationsDoneBy : public StmtExprVisitor {
@@ -40,5 +40,5 @@ index 841f1d6..40f6e1f 100644
  
  /*!
 -- 
-2.34.1
+2.30.2
 

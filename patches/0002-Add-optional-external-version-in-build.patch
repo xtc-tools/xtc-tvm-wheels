@@ -1,18 +1,18 @@
-From 6b7146c627cba9bce5f90c8d3f7d66a0e366bf9e Mon Sep 17 00:00:00 2001
+From 7754c7b49c516b4857bd1c233acaabad4def6aef Mon Sep 17 00:00:00 2001
 From: Christophe Guillon <christophe.guillon@inria.fr>
 Date: Sun, 2 Feb 2025 13:36:38 +0100
-Subject: [PATCH 2/2] Add optional external version in build
+Subject: [PATCH] Add optional external version in build
 
 Set TVM_PKG_VERSION in order to override default version.
 
 Amended on 2025/08/19 to add optional envvar list
 TVM_EXTRA_LIB_LIST of dirs/files to add to installed LIB_LIST.
 ---
- python/setup.py | 2 +++++-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ python/setup.py | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/python/setup.py b/python/setup.py
-index 594ab5f..5ed753e 100644
+index 55f29c65..89fd3470 100644
 --- a/python/setup.py
 +++ b/python/setup.py
 @@ -130,6 +130,10 @@ def _remove_path(path):
@@ -36,5 +36,5 @@ index 594ab5f..5ed753e 100644
      long_description=long_description_contents(),
      long_description_content_type="text/markdown",
 -- 
-2.34.1
+2.30.2
 
