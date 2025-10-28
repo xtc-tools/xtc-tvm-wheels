@@ -32,6 +32,7 @@ CIBW_TEST_COMMAND='{project}/tests/test-graph.sh'
 CIBW_BEFORE_ALL="env BUILD_PLATFORM=$BUILD_PLATFORM ./install-build-tools.sh && env BUILD_PLATFORM=$BUILD_PLATFORM ./install-llvm.sh && env BUILD_PLATFORM=$BUILD_PLATFORM ./build-tvm.sh"
 
 if [ "$BUILD_PLATFORM" = "linux" ]; then
+    DOCKER_ARGS=""
     CIBW_CONTAINER_ENGINE_ARG="CIBW_CONTAINER_ENGINE=docker;create_args:$DOCKER_ARGS"
 elif [ "$BUILD_PLATFORM" = "darwin" ]; then
     CIBW_PLATFORM='macos'
