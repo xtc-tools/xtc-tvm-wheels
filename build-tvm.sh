@@ -51,7 +51,7 @@ cmake \
     -DCMAKE_INSTALL_PREFIX:PATH="$INSTALL_DIR" \
     -DCMAKE_INSTALL_RPATH='$ORIGIN' \
     -DCMAKE_BUILD_TYPE="$TVM_BUILD_TYPE" \
-    -DCMAKE_CXX_FLAGS="-Wno-dangling-reference" \
+    -DCMAKE_CXX_FLAGS="-Wno-dangling-reference -Wno-deprecated-declarations" \
     $CCACHE_OPTS \
     -Wno-dev \
     -Wno-deprecated \
