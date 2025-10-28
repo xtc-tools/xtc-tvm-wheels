@@ -16,6 +16,6 @@ git submodule update --recursive --depth 1
 
 if [ -d "$dir"/patches ]; then
     for patch in "$dir"/patches/*.patch; do
-        patch -p1 <"$patch"
+        patch -p1 -i "$patch"
     done
 fi
