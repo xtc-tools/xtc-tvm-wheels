@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 set -x
-dir="$(readlink -e "$(dirname "$0")")"
+dir="$(dirname "$(readlink -f "$0")")"
+
 
 PYTHON_MAJOR="$(python -c 'import sys;print(sys.version_info.major)')"
 PYTHON_MINOR="$(python -c 'import sys;print(sys.version_info.minor)')"
