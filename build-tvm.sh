@@ -24,6 +24,10 @@ LLVM_PREFIX="$("$PYTHON" -c 'import llvm;print(llvm.__path__[0])')"
 
 [ "$BUILD_TVM_CLEAN_BUILD_DIR" != 1 ] || rm -rf "$BUILD_DIR"
 
+# Install minimal python dependencies
+# Ref to tvm/docker/install/ubuntu2004_install_python.sh
+pip3 install pip==24.2 setuptools==75.1.0
+
 rm -rf "$INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
 mkdir -p "$BUILD_DIR"
@@ -39,10 +43,15 @@ sed -i \
     "s|USE_LLVM OFF|USE_LLVM $LLVM_CONFIG|" \
     config.cmake
 
+# Add to CXX flags -Wno-dangling-reference to
+# disable spurious warning on dangling refs with gcc 14:
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=107532
+
 cmake \
     -DCMAKE_INSTALL_PREFIX:PATH="$INSTALL_DIR" \
     -DCMAKE_INSTALL_RPATH='$ORIGIN' \
     -DCMAKE_BUILD_TYPE="$TVM_BUILD_TYPE" \
+    -DCMAKE_CXX_FLAGS="-Wno-dangling-reference" \
     $CCACHE_OPTS \
     -Wno-dev \
     -Wno-deprecated \
