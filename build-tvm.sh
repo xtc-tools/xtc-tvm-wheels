@@ -16,12 +16,7 @@ cp -a "$LLVM_PREFIX"/lib "$LLVM_PREFIX"/include "$LLVM_PREFIX"/bin "$TVM_INSTALL
 LLVM_CONFIG="$TVM_INSTALL_PREFIX/bin/llvm-config"
 
 cp cmake/config.cmake build
-if [ "$BUILD_PLATFORM" = "darwin" ]; then
-    # --ignore-libllvm --link-static for MacOS 
-    sed -i '' "s|USE_LLVM OFF|USE_LLVM \"$LLVM_CONFIG --ignore-libllvm --link-static\"|" build/config.cmake
-else
-    sed -i '' "s|USE_LLVM OFF|USE_LLVM $LLVM_CONFIG|" build/config.cmake
-fi
+sed -i '' "s|USE_LLVM OFF|USE_LLVM $LLVM_CONFIG|" build/config.cmake
 
 cmake \
     -DCMAKE_INSTALL_PREFIX:PATH="$TVM_INSTALL_PREFIX" \

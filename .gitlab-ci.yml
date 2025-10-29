@@ -42,7 +42,7 @@ macos:
     - python -m pip install -r requirements.txt    
     - ./checkout-tvm.sh
     - ./build-wheels.sh
-    - twine upload --repository-url $REPOSITORY_URL --skip-existing wheelhouse/*.whl
+    - twine upload --repository-url $REPOSITORY_URL wheelhouse/*.whl
   artifacts:
     paths:
       - wheelhouse/
