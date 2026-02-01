@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 set -x
-dir="$(realpath -e "$(dirname "$0")")"
+dir="$(dirname "$(readlink -f "$0")")"
 
 # dump env                                                                                                                                                                                                        env
 
-BUILD_DIR="tvm/build"
-INSTALL_DIR="${TVM_INSTALL_PREFIX-$dir/install}"
+BUILD_DIR="${1-tvm/build}"
+INSTALL_DIR="${2-$dir/tvm/install}"
 
 BUILD_TVM_CLEAN_BUILD_DIR="${BUILD_TVM_CLEAN_BUILD_DIR:-1}"
 BUILD_TVM_CLEAN_BUILD_DIR_POST="${BUILD_TVM_CLEAN_BUILD_DIR_POST:-0}"
@@ -19,7 +19,7 @@ CCACHE_OPTS=""
     CCACHE_OPTS="-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
 
 
-PYTHON=/opt/python/cp310-cp310/bin/python
+PYTHON="${PYTHON-python}"
 LLVM_PREFIX="$("$PYTHON" -c 'import llvm;print(llvm.__path__[0])')"
 
 [ "$BUILD_TVM_CLEAN_BUILD_DIR" != 1 ] || rm -rf "$BUILD_DIR"
@@ -42,25 +42,24 @@ cp -a "$LLVM_PREFIX"/lib "$LLVM_PREFIX"/include "$LLVM_PREFIX"/bin "$INSTALL_DIR
 LLVM_CONFIG="$INSTALL_DIR/bin/llvm-config"
 
 cp "$dir"/tvm/cmake/config.cmake .
-sed -i \
-    "s|USE_LLVM OFF|USE_LLVM $LLVM_CONFIG|" \
-    config.cmake
+sed -i.bak "s|USE_LLVM OFF|USE_LLVM $LLVM_CONFIG|" config.cmake
 
 # Add to CXX flags -Wno-dangling-reference to
 # disable spurious warning on dangling refs with gcc 14:
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=107532
+WARNING_OPTS=
+[ "$BUILD_PLATFORM" != "linux" ] || WARNING_OPTS="-DCMAKE_CXX_FLAGS=-Wno-dangling-reference"
 
 cmake \
     -DCMAKE_INSTALL_PREFIX:PATH="$INSTALL_DIR" \
     -DCMAKE_INSTALL_RPATH='$ORIGIN' \
     -DCMAKE_BUILD_TYPE="$TVM_BUILD_TYPE" \
-    -DCMAKE_CXX_FLAGS="-Wno-dangling-reference" \
+    $WARNING_OPTS \
     $CCACHE_OPTS \
     -Wno-dev \
     -Wno-deprecated \
     -G Ninja \
     "$dir"/tvm
-
 
 ninja
 ninja install

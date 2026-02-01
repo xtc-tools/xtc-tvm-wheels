@@ -63,9 +63,11 @@ Then install dependencies for the build script:
 
 Update the version for TVM:
 - in `tvm_revision.txt`: put the full sha1 of the new revision to publish
-- in `tvm_version.txt`: update to `x.y.z.YYYMMDDHH+<sha1[:8]>`
+- in `tvm_version.txt`: update to `x.y.z.YYYMMDDXX+<sha1[:8]>`
   where `sha1[:8]` is the first 8 bytes of the revision above, and `x.y.z` is the
-  TVM last tag for this revision.
+  TVM last tag for this revision. The `YYYMMDD` date tag should be the commit date
+  of the TVM revision. The 'XX' part is actually the part identifying the revision
+  of the wheel, should start by 01 at each new TVM revision.
 
 Then run the cibuildwheel which will create the wheels to install in `wheelhouse/`:
 

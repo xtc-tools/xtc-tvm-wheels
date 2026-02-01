@@ -2,7 +2,6 @@ variables:
   TWINE_USERNAME: gitlab-ci-token
   TWINE_PASSWORD: $CI_JOB_TOKEN
   REPOSITORY_URL: $CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/pypi
-  BUILD_CCACHE_DIR: /cache/$CI_PROJECT_PATH_SLUG/ccache
   PUBLISH_PACKAGES:
     description: "Publish python packages if true, forced for pipelines on tag"
     value: "false"
@@ -15,8 +14,24 @@ variables:
     options:
       - "true"
       - "false"
+  BUILD_LINUX:
+   description: "Build for linux"
+   value: "true"
+   options:
+     - "true"
+     - "false"
+  BUILD_MACOS:
+   description: "Build for macos"
+   value: "true"
+   options:
+     - "true"
+     - "false"
 
 default:
+  before_script:
+    - env
+
+linux-tvm:
   image: python:3.12
   # Use pinocchio to speedup builds
   tags:
@@ -25,21 +40,38 @@ default:
   # tags:
   #   - ci.inria.fr
   #   - large
-  before_script:
-    - df -h .
-    - free -h
-    - env
-    - python --version
-    - pip list
-    - curl -sSL https://get.docker.com/ | sh
-
-linux-tvm:
+  variables:
+    BUILD_CCACHE_DIR: /cache/$CI_PROJECT_PATH_SLUG/ccache
+    BUILD_PIP_CACHE_DIR: /cache/$CI_PROJECT_PATH_SLUG/pip_ccache
   stage: build
   rules:
     - if: $CI_COMMIT_TAG =~ /^tvm-v/
-    - if: $CI_PIPELINE_SOURCE == "web" && $BUILD_TVM == "true"
+    - if: $CI_PIPELINE_SOURCE == "web" && $BUILD_TVM == "true" && $BUILD_LINUX == "true"
   script:
     - test -z "${CI_COMMIT_TAG-}" || PUBLISH_PACKAGES=true
+    - curl -sSL https://get.docker.com/ | sh
+    - python -m pip install -r requirements.txt
+    - ./checkout-tvm.sh
+    - ./build-wheels.sh
+    - test "$PUBLISH_PACKAGES" != true || env TWINE_REPOSITORY_URL="$REPOSITORY_URL" ./twine-upload.sh wheelhouse/*.whl
+  artifacts:
+    paths:
+      - wheelhouse/
+
+macos-tvm:
+  tags:
+    - macos-baremetal-applem4
+  variables:
+    BUILD_PLATFORM: "darwin"
+  stage: build
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^tvm-v/
+    - if: $CI_PIPELINE_SOURCE == "web" && $BUILD_TVM == "true" && $BUILD_MACOS == "true"
+  script:
+    - test -z "${CI_COMMIT_TAG-}" || PUBLISH_PACKAGES=true
+    - export PATH="/opt/homebrew/bin:$PATH"
+    - python3.12 -m venv .venv
+    - source .venv/bin/activate
     - python -m pip install -r requirements.txt
     - ./checkout-tvm.sh
     - ./build-wheels.sh

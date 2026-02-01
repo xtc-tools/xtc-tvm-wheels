@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 set -x
-dir="$(realpath -e "$(dirname "$0")")"
+dir="$(dirname "$(readlink -f "$0")")"
 
 TVM_REVISION="$(cat "$dir"/tvm_revision.txt)"
 
