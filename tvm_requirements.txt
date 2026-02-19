@@ -1,2 +1,0 @@
---index-url https://gitlab.inria.fr/api/v4/projects/57616/packages/pypi/simple
-tvm~=0.16.0
