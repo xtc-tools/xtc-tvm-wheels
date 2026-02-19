@@ -6,7 +6,7 @@ dir="$(dirname "$(readlink -f "$0")")"
 cd "$dir"
 
 TVM_PKG_NAME="xtc-tvm-python-bindings"
-TVM_PKG_VERSION="$(cat tvm_version.txt)"
+TVM_PKG_VERSION="$(cat version.txt)"
 
 BUILD_PLATFORM="${BUILD_PLATFORM:-$(uname -s | tr '[:upper:]' '[:lower:]')}"
 

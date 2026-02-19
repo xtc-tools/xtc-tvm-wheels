@@ -63,7 +63,7 @@ Then install dependencies for the build script:
 
 Update the version for TVM:
 - in `tvm_revision.txt`: put the full sha1 of the new revision to publish
-- in `tvm_version.txt`: update to `x.y.z.X`
+- in `version.txt`: update to `x.y.z.X`
   where `x.y.z` is the TVM last tag for this revision.
   The 'X' part is actually the part identifying the revision
   of the wheel, should start by 1 at each new TVM revision.
