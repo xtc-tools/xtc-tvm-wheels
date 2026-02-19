@@ -1,4 +1,4 @@
-name: XTC TVM Python Bindings Wheels Build
+name: XTC TVM tools and Python bindings wheels build
 
 on:
   push:
@@ -8,6 +8,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-14]
     steps:
@@ -59,6 +60,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         os: [Linux, macOS]
     environment:
@@ -77,12 +79,14 @@ jobs:
       with:
         repository-url: https://test.pypi.org/legacy/
         verbose: true
+        skip-existing: true
 
   publish-to-pypi:
     if: startsWith(github.ref, 'refs/tags/tvm-v')  # only publish to PyPI on tag pushes
     needs: [build]
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         os: [Linux, macOS]
     environment:
