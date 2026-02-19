@@ -4,9 +4,12 @@ set -x
 dir="$(dirname "$(readlink -f "$0")")"
 
 # dump env                                                                                                                                                                                                        env
+env | sort
 
 BUILD_DIR="${1-tvm/build}"
 INSTALL_DIR="${2-$dir/tvm/install}"
+
+BUILD_PLATFORM="${BUILD_PLATFORM:-$(uname -s | tr '[:upper:]' '[:lower:]')}"
 
 BUILD_TVM_CLEAN_BUILD_DIR="${BUILD_TVM_CLEAN_BUILD_DIR:-1}"
 BUILD_TVM_CLEAN_BUILD_DIR_POST="${BUILD_TVM_CLEAN_BUILD_DIR_POST:-0}"
@@ -34,9 +37,7 @@ mkdir -p "$BUILD_DIR"
 
 cd "$BUILD_DIR"
 
-# Install llvm components in install dir
-cp -a "$LLVM_PREFIX"/lib "$LLVM_PREFIX"/include "$LLVM_PREFIX"/bin "$INSTALL_DIR"
-LLVM_CONFIG="$INSTALL_DIR/bin/llvm-config"
+LLVM_CONFIG="$LLVM_PREFIX/bin/llvm-config"
 
 cp "$dir"/tvm/cmake/config.cmake .
 sed -i.bak "s|USE_LLVM OFF|USE_LLVM $LLVM_CONFIG|" config.cmake
@@ -47,9 +48,10 @@ sed -i.bak "s|USE_LLVM OFF|USE_LLVM $LLVM_CONFIG|" config.cmake
 WARNING_OPTS=
 [ "$BUILD_PLATFORM" != "linux" ] || WARNING_OPTS="-DCMAKE_CXX_FLAGS=-Wno-dangling-reference -Wno-deprecated-declarations"
 
+# Add to RPATH ../llvm/lib for libLLVM.so installed by xtc-llvm-tools package
 cmake \
     -DCMAKE_INSTALL_PREFIX:PATH="$INSTALL_DIR" \
-    -DCMAKE_INSTALL_RPATH='$ORIGIN' \
+    -DCMAKE_INSTALL_RPATH='$ORIGIN:$ORIGIN/../llvm/lib' \
     -DCMAKE_BUILD_TYPE="$TVM_BUILD_TYPE" \
     ${WARNING_OPTS:+"$WARNING_OPTS"} \
     $CCACHE_OPTS \

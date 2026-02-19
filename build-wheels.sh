@@ -38,7 +38,7 @@ CIBW_TEST_COMMAND="unset TVM_LIBRARY_PATH && {project}/tests/test-graph.sh"
 BUILD_PYTHON=python
 [ "$BUILD_PLATFORM" != "linux" ] || BUILD_PYTHON=/opt/python/cp310-cp310/bin/python
 CIBW_BEFORE_ALL="env PYTHON=$BUILD_PYTHON sh -c './install-build-tools.sh && ./install-llvm.sh && ./build-tvm.sh'"
-CIBW_BEFORE_TEST=""
+CIBW_BEFORE_TEST="./install-llvm.sh"
 MACOSX_DEPLOYMENT_ARGS=""
 
 if [ "$BUILD_PLATFORM" = "linux" ]; then
@@ -62,7 +62,6 @@ elif [ "$BUILD_PLATFORM" = "darwin" ]; then
     CIBW_MANYLINUX_IMAGE=""
     TVM_EXTRA_LIB_LIST=""
     MACOSX_DEPLOYMENT_ARGS="MACOSX_DEPLOYMENT_TARGET=14.0" # supports macos14+
-    CIBW_BEFORE_TEST="./install-llvm.sh"
 else
     echo "Error: Unknown BUILD_PLATFORM '$BUILD_PLATFORM'. Must be 'linux' or 'darwin'."
     exit 1
