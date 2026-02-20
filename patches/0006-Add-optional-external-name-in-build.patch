@@ -1,0 +1,26 @@
+From 5b72b8670896b7a67438b283477de4cda4e7cbf2 Mon Sep 17 00:00:00 2001
+From: Christophe Guillon <christophe.guillon@inria.fr>
+Date: Wed, 18 Feb 2026 14:52:57 +0100
+Subject: [PATCH] Add optional external name in build
+
+Set TVM_PKG_NAME envvar to override python package name, default to tvm.
+---
+ python/setup.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/python/setup.py b/python/setup.py
+index 89fd347..f4fae31 100644
+--- a/python/setup.py
++++ b/python/setup.py
+@@ -246,7 +246,7 @@ extras_require = {
+ }
+ 
+ setup(
+-    name="tvm",
++    name=os.environ.get("TVM_PKG_NAME", "tvm"),
+     version=os.environ.get("TVM_PKG_VERSION", __version__),
+     description="TVM: An End to End Tensor IR/DSL Stack for Deep Learning Systems",
+     long_description=long_description_contents(),
+-- 
+2.52.0
+

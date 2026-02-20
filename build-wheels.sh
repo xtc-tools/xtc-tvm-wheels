@@ -5,9 +5,10 @@ dir="$(dirname "$(readlink -f "$0")")"
 
 cd "$dir"
 
-TVM_PKG_VERSION="$(cat tvm_version.txt)"
+TVM_PKG_NAME="xtc-tvm-python-bindings"
+TVM_PKG_VERSION="$(cat version.txt)"
 
-BUILD_PLATFORM="${BUILD_PLATFORM:-linux}"
+BUILD_PLATFORM="${BUILD_PLATFORM:-$(uname -s | tr '[:upper:]' '[:lower:]')}"
 
 # Trick for installing libLLVM along libtvm.so
 # Set TVM_EXTRA_LIB_LIST along with corresponding patch to copy libLLVM.so
@@ -37,7 +38,7 @@ CIBW_TEST_COMMAND="unset TVM_LIBRARY_PATH && {project}/tests/test-graph.sh"
 BUILD_PYTHON=python
 [ "$BUILD_PLATFORM" != "linux" ] || BUILD_PYTHON=/opt/python/cp310-cp310/bin/python
 CIBW_BEFORE_ALL="env PYTHON=$BUILD_PYTHON sh -c './install-build-tools.sh && ./install-llvm.sh && ./build-tvm.sh'"
-CIBW_BEFORE_TEST=""
+CIBW_BEFORE_TEST="./install-llvm.sh"
 MACOSX_DEPLOYMENT_ARGS=""
 
 if [ "$BUILD_PLATFORM" = "linux" ]; then
@@ -61,7 +62,6 @@ elif [ "$BUILD_PLATFORM" = "darwin" ]; then
     CIBW_MANYLINUX_IMAGE=""
     TVM_EXTRA_LIB_LIST=""
     MACOSX_DEPLOYMENT_ARGS="MACOSX_DEPLOYMENT_TARGET=14.0" # supports macos14+
-    CIBW_BEFORE_TEST="./install-llvm.sh"
 else
     echo "Error: Unknown BUILD_PLATFORM '$BUILD_PLATFORM'. Must be 'linux' or 'darwin'."
     exit 1
@@ -76,6 +76,7 @@ ENV_VARS=(
     CIBW_BEFORE_ALL="$CIBW_BEFORE_ALL"
     CIBW_BEFORE_TEST="$CIBW_BEFORE_TEST"
     CIBW_TEST_COMMAND="$CIBW_TEST_COMMAND"
+    TVM_PKG_NAME="$TVM_PKG_NAME"
     TVM_PKG_VERSION="$TVM_PKG_VERSION"
     TVM_EXTRA_LIB_LIST="$TVM_EXTRA_LIB_LIST"
     TVM_LIBRARY_PATH="$TVM_LIBRARY_PATH"
@@ -84,7 +85,8 @@ ENV_VARS=(
     PIP_CACHE_DIR="$BUILD_PIP_CACHE_DIR"
     CCACHE_DIR="$BUILD_CCACHE_DIR"
     CIBW_REPAIR_WHEEL_COMMAND_MACOS="pip install wheel && python mac-os-wheels-fixer.py --original {wheel} --output {dest_dir}"
-    CIBW_ENVIRONMENT_PASS="TVM_PKG_VERSION TVM_EXTRA_LIB_LIST TVM_LIBRARY_PATH BUILD_TVM_CLEAN_BUILD_DIR BUILD_PLATFORM PIP_CACHE_DIR CCACHE_DIR"
+    CIBW_REPAIR_WHEEL_COMMAND_LINUX="auditwheel repair --exclude 'libLLVM.so' -w {dest_dir} {wheel}"
+    CIBW_ENVIRONMENT_PASS="TVM_PKG_NAME TVM_PKG_VERSION TVM_EXTRA_LIB_LIST TVM_LIBRARY_PATH BUILD_TVM_CLEAN_BUILD_DIR BUILD_PLATFORM PIP_CACHE_DIR CCACHE_DIR"
     CIBW_BUILD_VERBOSITY="$BUILD_VERBOSITY"
     CIBW_DEBUG_KEEP_CONTAINER="$CIBW_DEBUG_KEEP_CONTAINER"
 )
