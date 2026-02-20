@@ -32,12 +32,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/pip_cache
-          key: ${{ runner.os }}-pip-cache
+          key: ${{ runner.os }}-pip-cache-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-pip-cache
       - name: CCache Cache
         uses: actions/cache@v4
         with:
           path: ~/ccache
-          key: ${{ runner.os }}-ccache
+          key: ${{ runner.os }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-ccache
       - name: Checkout TVM
         run: |
           ./checkout-tvm.sh
