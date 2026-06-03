@@ -1,0 +1,26 @@
+From ba65fb3859c36005cb2645b80de42615ee27db64 Mon Sep 17 00:00:00 2001
+From: Christophe Guillon <christophe.guillon@inria.fr>
+Date: Wed, 3 Jun 2026 16:52:46 +0200
+Subject: [PATCH] Remove spurious warning for big/little
+
+---
+ src/runtime/threading_backend.cc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/runtime/threading_backend.cc b/src/runtime/threading_backend.cc
+index 177ecf511..407e4ff3b 100644
+--- a/src/runtime/threading_backend.cc
++++ b/src/runtime/threading_backend.cc
+@@ -343,7 +343,8 @@ class ThreadGroup::Impl {
+     }
+     if (big_count_ + little_count_ != static_cast<int>(sorted_order_.size())) {
+       big_count_ = static_cast<int>(sorted_order_.size()) - little_count_;
+-      LOG(WARNING) << "more than two frequencies detected! Forced big_count_ to " << big_count_;
++      // With new CPUs, we may have more than 2 max frequencies, do not warn
++      // LOG(WARNING) << "more than two frequencies detected! Forced big_count_ to " << big_count_;
+     }
+   }
+ 
+-- 
+2.54.0
+
