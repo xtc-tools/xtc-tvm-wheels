@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-14]
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-14]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -32,14 +32,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/pip_cache
-          key: ${{ runner.os }}-pip-cache-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-pip-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-pip-cache-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}-pip-cache
       - name: CCache Cache
         uses: actions/cache@v4
         with:
           path: ~/ccache
-          key: ${{ runner.os }}-ccache-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-ccache
+          key: ${{ runner.os }}-${{ runner.arch }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}-ccache
       - name: Checkout TVM
         run: |
           ./checkout-tvm.sh
@@ -55,7 +55,7 @@ jobs:
       - name: Store distribution packages
         uses: actions/upload-artifact@v5
         with:
-          name: python-package-xtc-tvm-python-bindings-${{ runner.os }}
+          name: python-package-xtc-tvm-python-bindings-${{ runner.os }}-${{ runner.arch }}
           path: wheelhouse/
 
   publish-to-testpypi:
@@ -64,7 +64,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [Linux, macOS]
+        os_arch: [Linux-X64, Linux-ARM64, macOS-ARM64]
     environment:
       name: testpypi
       url: https://test.pypi.org/p/xtc-tvm-python-bindings
@@ -74,7 +74,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v6
       with:
-        name: python-package-xtc-tvm-python-bindings-${{ matrix.os }}
+        name: python-package-xtc-tvm-python-bindings-${{ matrix.os_arch }}
         path: dist/
     - name: Publish distribution to Test PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
@@ -90,7 +90,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [Linux, macOS]
+        os_arch: [Linux-X64, Linux-ARM64, macOS-ARM64]
     environment:
       name: pypi
       url: https://pypi.org/p/xtc-tvm-python-bindings
@@ -100,7 +100,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v6
       with:
-        name: python-package-xtc-tvm-python-bindings-${{ matrix.os }}
+        name: python-package-xtc-tvm-python-bindings-${{ matrix.os_arch }}
         path: dist/
     - name: Publish distribution to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
