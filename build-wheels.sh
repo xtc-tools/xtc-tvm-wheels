@@ -9,6 +9,7 @@ TVM_PKG_NAME="xtc-tvm-python-bindings"
 TVM_PKG_VERSION="$(cat version.txt)"
 
 BUILD_PLATFORM="${BUILD_PLATFORM:-$(uname -s | tr '[:upper:]' '[:lower:]')}"
+BUILD_ARCH="${BUILD_ARCH:-$(uname -m)}"
 
 # Trick for installing libLLVM along libtvm.so
 # Set TVM_EXTRA_LIB_LIST along with corresponding patch to copy libLLVM.so
@@ -22,9 +23,9 @@ TVM_LIBRARY_PATH=/project/tvm/install/lib
 [ "$BUILD_PLATFORM" = linux ] || TVM_LIBRARY_PATH="$dir"/tvm/install/lib
 
 CIBW_PLATFORM="linux"
-CIBW_ARCHS="x86_64"
 CIBW_BUILD="cp310-manylinux* cp311-manylinux* cp312-manylinux* cp313-manylinux* cp314-manylinux*"
 CIBW_MANYLINUX_IMAGE="manylinux_2_28"
+CIBW_MANYLINUX_ENV_NAME="CIBW_MANYLINUX_X86_64_IMAGE"
 CONTAINER_ENGINE_ARG=""
 
 BUILD_VERBOSITY="${BUILD_VERBOSITY:-0}"
@@ -42,6 +43,20 @@ CIBW_BEFORE_TEST="./install-llvm.sh"
 MACOSX_DEPLOYMENT_ARGS=""
 
 if [ "$BUILD_PLATFORM" = "linux" ]; then
+    case "$BUILD_ARCH" in
+        x86_64|amd64)
+            CIBW_ARCHS="x86_64"
+            CIBW_MANYLINUX_ENV_NAME="CIBW_MANYLINUX_X86_64_IMAGE"
+            ;;
+        aarch64|arm64)
+            CIBW_ARCHS="aarch64"
+            CIBW_MANYLINUX_ENV_NAME="CIBW_MANYLINUX_AARCH64_IMAGE"
+            ;;
+        *)
+            echo "Error: Unsupported Linux architecture '$BUILD_ARCH'. Must be 'x86_64' or 'aarch64'."
+            exit 1
+            ;;
+    esac
     DOCKER_ARGS=""
     DOCKER_CCACHE_DIR=""
     if [ -n "$BUILD_PIP_CACHE_DIR" ]; then
@@ -72,7 +87,7 @@ ENV_VARS=(
     CIBW_ARCHS="$CIBW_ARCHS"
     CIBW_BUILD="$CIBW_BUILD"
     CIBW_PROJECT_REQUIRES_PYTHON=">=3.10"
-    CIBW_MANYLINUX_X86_64_IMAGE="$CIBW_MANYLINUX_IMAGE"
+    "$CIBW_MANYLINUX_ENV_NAME=$CIBW_MANYLINUX_IMAGE"
     CIBW_BEFORE_ALL="$CIBW_BEFORE_ALL"
     CIBW_BEFORE_TEST="$CIBW_BEFORE_TEST"
     CIBW_TEST_COMMAND="$CIBW_TEST_COMMAND"
